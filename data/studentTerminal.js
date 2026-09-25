@@ -794,7 +794,7 @@ function renderAllTerminalReports() {
       return `
         <div class="assessment-table-container terminal-report-print-card">
           <div class="terminal-card-header-details">
-            <img src="../CRIG-LOGO1.png" alt="logo" class="school-img">
+            <img src="icons/CRIG-LOGO1.png" alt="logo" class="school-img">
             <div class="school-details-middle">
               <h2>MINISTRY OF EDUCATION</h2>
               <h3>CRIG PRIMARY SCHOOL</h3>
