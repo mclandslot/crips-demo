@@ -552,14 +552,44 @@ async function buildTerminalStudentRows() {
   const vacationDate = reportSettingsRows?.[0]?.vacation_date || "";
   const nextTermDate = reportSettingsRows?.[0]?.next_term_date || "";
 
-  const subjectSet = new Set();
+  /* subjects print in the school's report order; any subject not listed
+     here follows after, alphabetically */
+  const subjectDisplayNames = [
+    "English Language",
+    "Mathematics",
+    "Science",
+    "Religious And Moral Education",
+    "Our World Our People",
+    "Ghanaian Language",
+    "History",
+    "Computing",
+    "French",
+    "Creative Arts",
+    "Reading"
+  ];
+  const subjectOrder = subjectDisplayNames.map(normalizeText);
+
+  const subjectRank = (name) => {
+    const index = subjectOrder.indexOf(normalizeText(name));
+    return index === -1 ? subjectOrder.length : index;
+  };
+
+  /* one row per subject however its marks were spelled
+     (e.g. "Religious and Moral Education" vs "Religious And Moral Education") */
+  const subjectsByKey = new Map();
 
   (marks || []).forEach((item) => {
     const subjectName = String(item.subject || "").trim();
-    if (subjectName) subjectSet.add(subjectName);
+    const key = normalizeText(subjectName);
+    if (!subjectName || subjectsByKey.has(key)) return;
+
+    const rank = subjectOrder.indexOf(key);
+    subjectsByKey.set(key, rank === -1 ? subjectName : subjectDisplayNames[rank]);
   });
 
-  const allSubjects = [...subjectSet].sort((a, b) => a.localeCompare(b));
+  const allSubjects = [...subjectsByKey.values()].sort(
+    (a, b) => subjectRank(a) - subjectRank(b) || a.localeCompare(b)
+  );
 
   const remarksMap = new Map();
   (remarksData || []).forEach((item) => {
@@ -1077,6 +1107,15 @@ function printAllTerminalReports() {
 
           .left-text {
             text-align: left;
+          }
+
+          /* the subject column takes the room it needs so long names like
+             "Religious And Moral Education" stay on one line */
+          .report-table th:first-child,
+          .report-table td:first-child {
+            width: 20%;
+            white-space: nowrap;
+            padding-left: 8px;
           }
 
           h2, h3, h4, h5, p {
