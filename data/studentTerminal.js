@@ -574,12 +574,17 @@ async function buildTerminalStudentRows() {
 
   const attendancePresentMap = new Map();
   const distinctAttendanceDates = new Set();
-  
+  const attendanceMarkedStudents = new Set();
+
   (attendanceRows || []).forEach((item) => {
     if (item.date) {
       distinctAttendanceDates.add(item.date);
     }
-  
+
+    if (item.student_id) {
+      attendanceMarkedStudents.add(item.student_id);
+    }
+
     const statusValue = normalizeText(item.status);
   
     const isPresent =
@@ -697,8 +702,14 @@ async function buildTerminalStudentRows() {
       total,
       average,
       position: "-",
-      attendancePresent: attendancePresentMap.get(student.id) || 0,
-      attendanceTotal: configuredTotalDays,
+      /* attendance the class teacher never marked stays blank so the
+         report prints dotted lines instead of a misleading 0 */
+      attendancePresent: attendanceMarkedStudents.has(student.id)
+        ? attendancePresentMap.get(student.id) || 0
+        : "",
+      attendanceTotal: attendanceMarkedStudents.has(student.id)
+        ? configuredTotalDays
+        : "",
       conduct: remarksMap.get(student.id)?.conduct || "",
       attitude: remarksMap.get(student.id)?.attitude || "",
       interest: remarksMap.get(student.id)?.interest || "",
@@ -844,14 +855,14 @@ function renderAllTerminalReports() {
 
           <div class="over-all-remarks-card">
             <div class="flex-h4-text">
-              <h4>ATTENDANCE: <span>${studentRow.attendancePresent}</span></h4>
-              <h4>OUT OF: <span>${studentRow.attendanceTotal}</span></h4>
-              <h4>PROMOTED TO: <span>${remarkOrDots(studentRow.promotionClass, 60)}</span></h4>
+              <h4>ATTENDANCE: <span>${remarkOrDots(studentRow.attendancePresent, 10)}</span></h4>
+              <h4>OUT OF: <span>${remarkOrDots(studentRow.attendanceTotal, 10)}</span></h4>
+              <h4>PROMOTED TO: <span>${remarkOrDots(studentRow.promotionClass, 50)}</span></h4>
             </div>
 
-            <h4>CONDUCT: <span>${remarkOrDots(studentRow.conduct, 153)}</span></h4>
-            <h4>ATTITUDE: <span>${remarkOrDots(studentRow.attitude, 153)}</span></h4>
-            <h4>INTEREST: <span>${remarkOrDots(studentRow.interest, 153)}</span></h4>
+            <h4>CONDUCT: <span>${remarkOrDots(studentRow.conduct, 159)}</span></h4>
+            <h4>ATTITUDE: <span>${remarkOrDots(studentRow.attitude, 159)}</span></h4>
+            <h4>INTEREST: <span>${remarkOrDots(studentRow.interest, 159)}</span></h4>
             <h4>CLASS TEACHER'S REMARKS: <span>${remarkOrDots(studentRow.classRemark, 120)}</span></h4>
           </div>
 
@@ -1077,7 +1088,7 @@ function printAllTerminalReports() {
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    gap: 12px;
+    gap: 7px;
     margin-top: 20px;
 }
 
@@ -1115,6 +1126,7 @@ function printAllTerminalReports() {
 }
     .over-all-remarks-card h4{
     margin-left: 20px;
+    margin-bottom: 8px;
     }
 
           @page {
