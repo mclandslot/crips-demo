@@ -922,16 +922,20 @@ function printAllTerminalReports() {
     return;
   }
 
-  // ✅ FIX: force correct logo path
-  const logoUrl = `${window.location.origin}/CRIG-LOGO1.png`;
+  /* The print window is a blank page, so a relative src such as
+     "../CRIG-LOGO1.png" has nothing reliable to resolve against. img.src
+     is the absolute URL the browser already resolved for the on-screen
+     cards, so it points at the logo wherever the app is hosted (domain
+     root or a sub-folder), and the same goes for signature images. */
+  const printable = container.cloneNode(true);
+  const liveImages = container.querySelectorAll("img");
 
-  const printableHtml = container.innerHTML.replace(
-    /src="\.\.\/CRIG-LOGO1\.png"/g,
-    `src="${logoUrl}"`
-  );
+  printable.querySelectorAll("img").forEach((img, index) => {
+    const resolved = liveImages[index]?.src;
+    if (resolved) img.setAttribute("src", resolved);
+  });
 
-
- 
+  const printableHtml = printable.innerHTML;
 
   const printWindow = window.open("", "_blank", "width=1200,height=900");
 
